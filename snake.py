@@ -1,6 +1,7 @@
-import tkinter as tk
 import pygame
+import random
 import math
+import tkinter as tk 
 from tkinter import messagebox
 
 class cube(object):
@@ -16,7 +17,7 @@ class cube(object):
     def move(self, dirnx, dirny):
         self.dirnx = dirnx
         self.dirny = dirny
-        self.pos(self.pos[0] + self.dirnx, self.pos[1] + self.dirny)
+        self.pos= (self.pos[0] + self.dirnx, self.pos[1] + self.dirny)
 
     def draw(self, surface, eyes=False):
 
@@ -25,6 +26,7 @@ class cube(object):
         j = self.pos[1]
 
         pygame.draw.rect(surface, self.color, (i*dis+1, j*dis+1, dis-2, dis-2))
+
         if eyes: # Draws the eyes
             centre = dis//2
             radius = 3
@@ -57,6 +59,7 @@ class snake(object):
 
             keys = pygame.key.get_pressed()
 
+
             for key in keys:
 #if statement for left key prioritizes that one and elif statements on rest ensures that only one key can be pressed at a time
                 if keys[pygame.K_LEFT]:
@@ -80,7 +83,7 @@ class snake(object):
                     self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
 
 
-        for i, x in enumerate(self.body):
+        for i, c in enumerate(self.body):
             p = c.pos[:]
             if p in self.turns:
                 turn = self.turns[p]
@@ -89,10 +92,10 @@ class snake(object):
                     self.turns.pop(p)
             #this else statements handles transition from one side on the screen to the other
             else:
-                if x.dirnx == -1 and c.pos[0] <= 0: c.pos = (c.rows-1, c.pos[1])
-                elif x.dirnx == 1 and c.pos[0] >= c.rows-1: c.pos = (0, c.pos[1])
-                elif x.dirny == 1 and c.pos[1] >=  c.rows-1: c.pos = (c.pos[0],0)
-                elif x.dirnx == -1 and c.pos[1] <= 0: c.pos = (c.pos[0], c.rows -1)
+                if c.dirnx == -1 and c.pos[0] <= 0: c.pos = (c.rows-1, c.pos[1])
+                elif c.dirnx == 1 and c.pos[0] >= c.rows-1: c.pos = (0, c.pos[1])
+                elif c.dirny == 1 and c.pos[1] >=  c.rows-1: c.pos = (c.pos[0],0)
+                elif c.dirnx == -1 and c.pos[1] <= 0: c.pos = (c.pos[0], c.rows -1)
                 else: c.move(c.dirnx, c.dirny)
 
 
@@ -101,10 +104,27 @@ class snake(object):
 
 
     def reset(self, pos):
-        pass
+        self.head = cube(pos)
+        self.body = []
+        self.body.append(self.head)
+        self.dirnx = 0
+        self.dirny = 1
 
     def addCube(self):
-        pass
+        tail = self.body[-1]
+        dx, dy = tail.dirnx, tail.dirny 
+
+        if dx == 1 and dy == 0:
+            self.body.append(cube((tail.pos[0]-1, tail.pos[1])))
+        elif dx == -1 and dy == 0:
+            self.body.append(cube((tail.pos[0]+1, tail.pos[1])))
+        elif dx == 0 and dy == 1:
+            self.body.append(cube((tail.pos[0], tail.pos[1]-1)))
+        elif dx == 0 and dy == -1:
+            self.body.append(cube((tail.pos[0], tail.pos[1]+1)))
+
+        self.body[-1].dirnx = dx
+        self.body[-1].dirny = dy
     
     def draw(self, surface):
 
@@ -113,6 +133,8 @@ class snake(object):
                 c.draw(surface, True)
             else:
                 c.draw(surface)
+
+
 
 def drawGrid(w, rows, surface):
     sizeBtwn = w // rows
@@ -130,24 +152,48 @@ def drawGrid(w, rows, surface):
 
 
 def redrawWindow(surface):
-    global rows, width, s
+    global rows, width, s, snack
     #win.fill black screen
-    s.draw(surface)
     surface.fill((0,0,0))
+    s.draw(surface)
+    snack.draw(surface)
     drawGrid(width, rows, surface)
     pygame.display.update()
 
+def randomSnack(rows, item):
+    positions = item.body
+
+    while True:
+        x = random.randrange(rows)
+        y = random.randrange(rows)
+        #this if statement makes sure that snack does not spawn ontop of snake body
+        if len(list(filter(lambda z:z.pos == (x,y) , positions))) > 0:
+            continue
+        else:
+            break
+
+    return(x,y)
+        
+        
 
 def message_box(subject, content):
-    pass
+    root = tk.Tk()
+    root.attributes("-topmost", True)
+    root.withdraw()
+    messagebox.showinfo(subject, content)
+    try:
+        root.destroy()
+    except:
+        pass
 
 def main():
-    global rows, width, s
+    global rows, width, s, snack
     height = 500
     width = 500
     rows = 20
     win = pygame.display.set_mode((width, width))
     s = snake((0,255,0), (10,10))
+    snack = cube(randomSnack(rows, s), color=(255,0,0))
     clock = pygame.time.Clock()
     
     flag = True
@@ -158,6 +204,17 @@ def main():
         #the lower delay goes the faster pace of the game becomes
         clock.tick(10)
         #the lower clock tick goes the slower pace of the game becomes
+        s.move()
+        if s.body[0].pos == snack.pos:
+            s.addCube()
+            snack = cube(randomSnack(rows, s), color=(255,0,0))
+        for x in range(len(s.body)):
+            if s.body[x].pos in list(map(lambda z:z.pos, s.body[x+1:])):
+                print('Sorce:', len(s.body))
+                message_box('You Lost!', 'Play again')
+                s.reset((10,10))
+                break
+
         redrawWindow(win)
 
 
