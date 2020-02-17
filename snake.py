@@ -192,6 +192,7 @@ def main():
     width = 500
     rows = 20
     win = pygame.display.set_mode((width, width))
+    pygame.display.set_caption("SNAKE")
     s = snake((0,255,0), (10,10))
     snack = cube(randomSnack(rows, s), color=(255,0,0))
     clock = pygame.time.Clock()
