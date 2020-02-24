@@ -95,7 +95,7 @@ class snake(object):
                 if c.dirnx == -1 and c.pos[0] <= 0: c.pos = (c.rows-1, c.pos[1])
                 elif c.dirnx == 1 and c.pos[0] >= c.rows-1: c.pos = (0, c.pos[1])
                 elif c.dirny == 1 and c.pos[1] >=  c.rows-1: c.pos = (c.pos[0],0)
-                elif c.dirnx == -1 and c.pos[1] <= 0: c.pos = (c.pos[0], c.rows -1)
+                elif c.dirny == -1 and c.pos[1] <= 0: c.pos = (c.pos[0], c.rows -1)
                 else: c.move(c.dirnx, c.dirny)
 
 
@@ -192,7 +192,7 @@ def main():
     width = 500
     rows = 20
     win = pygame.display.set_mode((width, width))
-    pygame.display.set_caption("SNAKE")
+    pygame.display.set_caption("Snake")
     s = snake((0,255,0), (10,10))
     snack = cube(randomSnack(rows, s), color=(255,0,0))
     clock = pygame.time.Clock()
